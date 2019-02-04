@@ -2,6 +2,12 @@ import pygame
 import random
 # import cx_Freeze
 
+"""BUGS!!
+elbocoins: inside blue boxes
+            not always counting
+crashed: Not an under car y-axis,
+                this makes the car crash in all objects under itself"""
+
 # !!Must have!!
 pygame.init()
 
@@ -31,6 +37,7 @@ clock = pygame.time.Clock()
 
 carImg = pygame.image.load('racerbil.png')
 carIco = pygame.image.load('racericon.png')
+elBo = pygame.image.load('electroboom.png')
 
 
 pygame.display.set_icon(carIco)
@@ -44,6 +51,18 @@ def things_dodged(count):
 
 def things(thingx, thingy, thingw, thingh, color):
     pygame.draw.rect(gameDisplay, color, [thingx, thingy, thingw, thingh])
+
+
+def elbocoin(coins):
+    coins += 1
+    font = pygame.font.SysFont("comicsansms", 25)
+    text = font.render("Electrobooms: " + str(coins - 1), True, blue)
+    gameDisplay.blit(text, (500, 0))
+    return coins
+
+
+def electroboom(elx, ely):
+    gameDisplay.blit(elBo, (elx, ely))
 
 
 def car(x, y):
@@ -178,7 +197,14 @@ def game_loop():
     thing_startx = random.randrange(0, display_width - int(thing_width))
     thing_starty = -600
 
+    # Electrobooms
+    elspeed = 7
+    elstartx = random.randrange(0, display_width - int(50))
+    elstarty = -3000
+
     dodged = 0
+    elbocoins = 0
+    maxelbocoins = 1
 
     gameExit = False
 
@@ -210,8 +236,13 @@ def game_loop():
 
         thing_starty += thing_speed
 
+        electroboom(elstartx, elstarty)
+
+        elstarty += elspeed
+
         car(x, y)
         things_dodged(dodged)
+        elbocoin(elbocoins)
 
         # Crashing
         if x > display_width - car_width or x < 0:
@@ -225,11 +256,27 @@ def game_loop():
             if thing_width < (display_width / 4):
                 thing_width += (dodged * 1.2)
 
+        if elstarty > display_height:
+            elstarty = random.randrange(-5000, -500)
+            elstartx = random.randrange(0, display_width - 50)
+            if catched_coin:
+                maxelbocoins += 1
+
+        catched_coin = False
+
         # Hvis boksen passerer bilens y-akse
         if y < thing_starty + thing_height:
             # Hvis blien er innenfor boksens "to" x-akser
             if x > thing_startx and x < thing_startx + thing_width or x + car_width > thing_startx and x + car_width < thing_startx + thing_width:
                 crash()
+
+        if y < elstarty + 50:
+            if x > elstartx and x < elstartx + 50 or x + 50 > elstartx and x + 50 < elstartx + 50:
+                catched_coin = True
+                # Bare en elbocoin
+                while elbocoins < maxelbocoins:
+                    elbocoins = elbocoin(elbocoins)
+
         # Kan ta parameters for å oppdatere bare spesifike ting
         pygame.display.update()
 
